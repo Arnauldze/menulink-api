@@ -1,7 +1,7 @@
 module.exports = {
     apps: [
         {
-            name: 'resto-api',
+            name: 'menulink-api',
             script: 'src/index.js',
             instances: 1, // 1 seul sur t2.micro (1 core)
             autorestart: true,
