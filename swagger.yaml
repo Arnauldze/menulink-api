@@ -16,10 +16,10 @@ info:
 
 
 servers:
-  - url: https://menulink.manegroupsarl.com/api
-    description: Production server (cPanel)
+  - url: http://51.21.168.233/api
+    description: Production server (AWS EC2)
   - url: https://menu-link-api.onrender.com/api
-    description: Production server (Render - backup)
+    description: Backup server (Render)
   - url: http://localhost:3000/api
     description: Development server
 
