@@ -16,7 +16,7 @@ info:
 
 
 servers:
-  - url: http://51.21.168.233/api
+  - url: https://menulink-api.duckdns.org/api
     description: Production server (AWS EC2)
   - url: https://menu-link-api.onrender.com/api
     description: Backup server (Render)
