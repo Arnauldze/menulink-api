@@ -21,17 +21,7 @@ const getCurrentLogLevel = () => LOG_LEVELS[LOG_LEVEL] || LOG_LEVELS.info;
 const formatLog = (level, message, data = {}) => {
   const timestamp = new Date().toISOString();
 
-  // Production: JSON format (easy to parse with CloudWatch, pm2 logs, etc.)
-  if (IS_PRODUCTION) {
-    return JSON.stringify({
-      timestamp,
-      level,
-      message,
-      ...(Object.keys(data).length > 0 && { data }),
-    });
-  }
-
-  // Development: colored, human-readable format
+  // Always use colored, human-readable format (easier to read in pm2 logs)
   const color = COLORS[level] || COLORS.reset;
   const dataStr = Object.keys(data).length > 0 ? ` ${JSON.stringify(data)}` : '';
   return `${COLORS.reset}${timestamp} ${color}[${level.toUpperCase()}]${COLORS.reset} ${message}${dataStr}`;
