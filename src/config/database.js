@@ -1,18 +1,16 @@
 const mongoose = require('mongoose');
+const logger = require('../utils/logger');
 
 const connectDB = async () => {
   try {
     const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/restaurant-management';
-    
-    await mongoose.connect(mongoUri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    
-    console.log('MongoDB connected successfully');
+
+    await mongoose.connect(mongoUri);
+
+    logger.info('MongoDB connected successfully');
     return mongoose.connection;
   } catch (error) {
-    console.error('MongoDB connection error:', error.message);
+    logger.error('MongoDB connection error', { error: error.message });
     process.exit(1);
   }
 };
@@ -20,9 +18,9 @@ const connectDB = async () => {
 const disconnectDB = async () => {
   try {
     await mongoose.disconnect();
-    console.log('MongoDB disconnected');
+    logger.info('MongoDB disconnected');
   } catch (error) {
-    console.error('MongoDB disconnection error:', error.message);
+    logger.error('MongoDB disconnection error', { error: error.message });
   }
 };
 

@@ -1,13 +1,5 @@
-const fs = require('fs');
-const path = require('path');
-
-const LOG_DIR = process.env.LOG_DIR || './logs';
 const LOG_LEVEL = process.env.LOG_LEVEL || 'info';
-
-// Create logs directory if it doesn't exist
-if (!fs.existsSync(LOG_DIR)) {
-  fs.mkdirSync(LOG_DIR, { recursive: true });
-}
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 const LOG_LEVELS = {
   error: 0,
@@ -16,16 +8,33 @@ const LOG_LEVELS = {
   debug: 3,
 };
 
+const COLORS = {
+  error: '\x1b[31m', // red
+  warn: '\x1b[33m',  // yellow
+  info: '\x1b[36m',  // cyan
+  debug: '\x1b[90m', // gray
+  reset: '\x1b[0m',
+};
+
 const getCurrentLogLevel = () => LOG_LEVELS[LOG_LEVEL] || LOG_LEVELS.info;
 
 const formatLog = (level, message, data = {}) => {
-  return JSON.stringify({
-    timestamp: new Date().toISOString(),
-    level,
-    message,
-    ...data,
-    env: process.env.NODE_ENV,
-  });
+  const timestamp = new Date().toISOString();
+
+  // Production: JSON format (easy to parse with CloudWatch, pm2 logs, etc.)
+  if (IS_PRODUCTION) {
+    return JSON.stringify({
+      timestamp,
+      level,
+      message,
+      ...(Object.keys(data).length > 0 && { data }),
+    });
+  }
+
+  // Development: colored, human-readable format
+  const color = COLORS[level] || COLORS.reset;
+  const dataStr = Object.keys(data).length > 0 ? ` ${JSON.stringify(data)}` : '';
+  return `${COLORS.reset}${timestamp} ${color}[${level.toUpperCase()}]${COLORS.reset} ${message}${dataStr}`;
 };
 
 const writeLog = (level, message, data = {}) => {
@@ -34,17 +43,15 @@ const writeLog = (level, message, data = {}) => {
   }
 
   const logMessage = formatLog(level, message, data);
-  const logFile = path.join(LOG_DIR, `${level}.log`);
-  const allLogsFile = path.join(LOG_DIR, 'all.log');
 
-  // Write to console in development
-  if (process.env.NODE_ENV !== 'production') {
+  // Always write to stdout/stderr — let pm2 handle log files & rotation
+  if (level === 'error') {
+    console.error(logMessage);
+  } else if (level === 'warn') {
+    console.warn(logMessage);
+  } else {
     console.log(logMessage);
   }
-
-  // Write to file
-  fs.appendFileSync(logFile, logMessage + '\n');
-  fs.appendFileSync(allLogsFile, logMessage + '\n');
 };
 
 const logger = {

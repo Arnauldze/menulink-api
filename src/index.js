@@ -4,11 +4,16 @@ const { connectDB } = require('./config/database');
 const corsMiddleware = require('./middleware/cors');
 const errorHandler = require('./middleware/errorHandler');
 const requestLogger = require('./middleware/requestLogger');
+const logger = require('./utils/logger');
+
+// Routes
 const healthRoutes = require('./routes/health');
 const sessionRoutes = require('./routes/sessions');
 const menuRoutes = require('./routes/menu');
-const seedRoutes = require('./routes/seed');
-const logger = require('./utils/logger');
+const orderRoutes = require('./routes/orders');
+const dishRoutes = require('./routes/dishes');
+const categoryRoutes = require('./routes/categories');
+const tableRoutes = require('./routes/tables');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,21 +24,20 @@ app.use(express.json());
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(requestLogger);
 
+// Swagger Documentation
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
-
-// Swagger Documentation Route
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-const orderRoutes = require('./routes/orders');
+// Seed route (disabled in production — NEVER expose in prod!)
+if (process.env.NODE_ENV !== 'production') {
+  const seedRoutes = require('./routes/seed');
+  app.use('/api/seed', seedRoutes);
+  logger.info('Seed route available at /api/seed');
+}
 
-const dishRoutes = require('./routes/dishes');
-const categoryRoutes = require('./routes/categories');
-const tableRoutes = require('./routes/tables');
-
-// Routes
+// API Routes
 app.use('/api', healthRoutes);
-app.use('/api/seed', seedRoutes); // Endpoint désactivé - ne pas exposer publiquement
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/menus', menuRoutes);
@@ -56,25 +60,9 @@ app.use((req, res) => {
 // Error handling middleware (must be last)
 app.use(errorHandler);
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  logger.info('SIGTERM signal received: closing HTTP server');
-  server.close(() => {
-    logger.info('HTTP server closed');
-    process.exit(0);
-  });
-});
-
-process.on('SIGINT', () => {
-  logger.info('SIGINT signal received: closing HTTP server');
-  server.close(() => {
-    logger.info('HTTP server closed');
-    process.exit(0);
-  });
-});
-
 // Start server
 let server;
+
 const startServer = async () => {
   try {
     await connectDB();
@@ -92,6 +80,27 @@ const startServer = async () => {
     process.exit(1);
   }
 };
+
+// Graceful shutdown
+const gracefulShutdown = (signal) => {
+  logger.info(`${signal} signal received: closing HTTP server`);
+  if (server) {
+    server.close(() => {
+      logger.info('HTTP server closed');
+      process.exit(0);
+    });
+    // Force shutdown after 10s if connections don't close
+    setTimeout(() => {
+      logger.error('Forced shutdown after timeout');
+      process.exit(1);
+    }, 10000);
+  } else {
+    process.exit(0);
+  }
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 startServer();
 
