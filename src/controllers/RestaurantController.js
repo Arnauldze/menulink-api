@@ -8,7 +8,8 @@ class RestaurantController {
      */
     async getSettings(req, res, next) {
         try {
-            const settings = await RestaurantService.getSettings();
+            const restaurantId = req.user.restaurant_id;
+            const settings = await RestaurantService.getSettings(restaurantId);
             res.status(200).json({
                 success: true,
                 data: settings
@@ -25,8 +26,9 @@ class RestaurantController {
      */
     async updateSettings(req, res, next) {
         try {
+            const restaurantId = req.user.restaurant_id;
             const updateData = req.body;
-            const settings = await RestaurantService.updateSettings(updateData);
+            const settings = await RestaurantService.updateSettings(restaurantId, updateData);
             res.status(200).json({
                 success: true,
                 message: 'Settings updated successfully',

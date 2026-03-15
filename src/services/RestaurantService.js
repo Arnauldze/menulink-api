@@ -6,13 +6,11 @@ class RestaurantService {
      * Get the restaurant configuration options.
      * Uses singleton pattern (creates default if it doesn't exist)
      */
-    async getSettings() {
+    async getSettings(restaurantId) {
         try {
-            let restaurant = await Restaurant.findOne();
+            const restaurant = await Restaurant.findById(restaurantId);
             if (!restaurant) {
-                restaurant = new Restaurant();
-                await restaurant.save();
-                logger.info('Default restaurant settings initialized');
+                throw new Error('Restaurant not found');
             }
             return restaurant;
         } catch (error) {
@@ -24,19 +22,19 @@ class RestaurantService {
     /**
      * Update restaurant settings
      */
-    async updateSettings(updateData) {
+    async updateSettings(restaurantId, updateData) {
         try {
-            let restaurant = await Restaurant.findOne();
+            const restaurant = await Restaurant.findByIdAndUpdate(
+                restaurantId,
+                { $set: updateData },
+                { new: true, runValidators: true }
+            );
+
             if (!restaurant) {
-                restaurant = new Restaurant(updateData);
-                await restaurant.save();
-            } else {
-                if (updateData.name !== undefined) restaurant.name = updateData.name;
-                if (updateData.welcome_banner !== undefined) restaurant.welcome_banner = updateData.welcome_banner;
-                await restaurant.save();
+                throw new Error('Restaurant not found');
             }
 
-            logger.info('Restaurant settings updated');
+            logger.info('Restaurant settings updated', { restaurantId });
             return restaurant;
         } catch (error) {
             logger.error('Error updating restaurant settings', { error: error.message });

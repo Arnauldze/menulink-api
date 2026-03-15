@@ -36,7 +36,9 @@ const RestaurantController = require('../controllers/RestaurantController');
  *       200:
  *         description: Settings updated successfully
  */
-router.get('/', RestaurantController.getSettings.bind(RestaurantController));
-router.put('/', RestaurantController.updateSettings.bind(RestaurantController));
+const authMiddleware = require('../middleware/auth');
+
+router.get('/', authMiddleware, RestaurantController.getSettings.bind(RestaurantController));
+router.put('/', authMiddleware, RestaurantController.updateSettings.bind(RestaurantController));
 
 module.exports = router;
