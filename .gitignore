@@ -83,6 +83,8 @@ uploads/
 # ===========================
 qr_codes/
 qr_codes_production/
+qr_codes_Update.zip
+*.zip
 
 # ===========================
 # Utility/one-off scripts
