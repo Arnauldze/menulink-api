@@ -24,7 +24,7 @@ class SessionController {
       // 1. Create the session
       const session = await SessionService.createSessionFromQRCode(qr_code);
 
-      // 2. Fetch the menu for this specific restaurant
+      // 2. Fetch the full menu for this specific restaurant
       const menu = await MenuService.getCompleteMenu(session.restaurant_id);
 
       // 3. Fetch public restaurant info for the banner/message

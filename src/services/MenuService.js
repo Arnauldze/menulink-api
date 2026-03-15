@@ -11,7 +11,7 @@ class MenuService {
   async getCompleteMenu(restaurantId) {
     try {
       // Get all active menus for this restaurant
-      const menus = await Menu.find({ is_active: true, restaurant_id: restaurantId }).populate('manager_id');
+      const menus = await Menu.find({ is_active: true, restaurant_id: restaurantId });
 
       if (menus.length === 0) {
         logger.info('No active menus found, returning empty menu');
