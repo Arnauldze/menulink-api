@@ -47,15 +47,75 @@ const CategoryController = require('../controllers/CategoryController');
  *         description: Category created
  */
 const authMiddleware = require('../middleware/auth');
+const optionalAuth = require('../middleware/optionalAuth');
 
-// ...
-
-router.get('/', CategoryController.listCategories.bind(CategoryController)); // Public
+/**
+ * @swagger
+ * /categories:
+ *   get:
+ *     summary: List all categories (optionally filter by menu_id)
+ *     tags: [Categories]
+ *     parameters:
+ *       - in: query
+ *         name: menu_id
+ *         schema:
+ *           type: string
+ *         description: Filter by menu ID (Optional)
+ *       - in: query
+ *         name: restaurant_id
+ *         schema:
+ *           type: string
+ *         description: Mandatory if no Auth token provided (Optional if token present)
+ *     responses:
+ *       200:
+ *         description: List of categories
+ *   post:
+ *     summary: Create a new category
+ *     tags: [Categories]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - menu_id
+ *               - name
+ *             properties:
+ *               menu_id:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *               display_order:
+ *                 type: integer
+ *     responses:
+ *       201:
+ *         description: Category created
+ */
+router.get('/', optionalAuth, CategoryController.listCategories.bind(CategoryController));
 router.post('/', authMiddleware, CategoryController.createCategory.bind(CategoryController));
 
-// ...
-
-router.get('/:id', CategoryController.getCategory.bind(CategoryController)); // Public
+/**
+ * @swagger
+ * /categories/{id}:
+ *   get:
+ *     summary: Get a specific category
+ *     tags: [Categories]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: restaurant_id
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Category details
+ */
+router.get('/:id', optionalAuth, CategoryController.getCategory.bind(CategoryController));
 router.put('/:id', authMiddleware, CategoryController.updateCategory.bind(CategoryController));
 router.delete('/:id', authMiddleware, CategoryController.deleteCategory.bind(CategoryController));
 

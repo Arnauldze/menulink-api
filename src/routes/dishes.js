@@ -3,6 +3,7 @@ const router = express.Router();
 const { upload, handleMulterError } = require('../middleware/multer');
 const DishController = require('../controllers/DishController');
 const authMiddleware = require('../middleware/auth');
+const optionalAuth = require('../middleware/optionalAuth');
 
 /**
  * @swagger
@@ -22,7 +23,24 @@ const authMiddleware = require('../middleware/auth');
  *         name: category_id
  *         schema:
  *           type: string
- *         description: Filter by category ID
+ *         description: Filter by category ID (Optional)
+ *       - in: query
+ *         name: restaurant_id
+ *         schema:
+ *           type: string
+ *         description: Mandatory if no Auth token provided (Optional if token present)
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number (Optional)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of items per page (Optional)
  *     responses:
  *       200:
  *         description: List of dishes
@@ -55,7 +73,7 @@ const authMiddleware = require('../middleware/auth');
  *       201:
  *         description: Dish created successfully
  */
-router.get('/', DishController.getDishes.bind(DishController)); // Public
+router.get('/', optionalAuth, DishController.getDishes.bind(DishController)); // Public but token-aware
 router.post('/', authMiddleware, upload.single('image'), DishController.createDish.bind(DishController));
 
 /**
