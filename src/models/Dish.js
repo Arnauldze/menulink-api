@@ -3,12 +3,17 @@ require('./Category');
 
 const dishSchema = new mongoose.Schema(
   {
-    categorie_id: {
+    restaurant_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Restaurant',
+      required: true,
+    },
+    category_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Category',
       required: true,
     },
-    nom: {
+    name: {
       type: String,
       required: true,
       trim: true,
@@ -17,18 +22,30 @@ const dishSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    prix: {
+    price: {
       type: Number,
       required: true,
       min: 0,
     },
-    disponible: {
+    is_available: {
       type: Boolean,
       default: true,
     },
     image_url: {
       type: String,
     },
+    prep_time: {
+      type: Number, // Temps de préparation estimé en minutes
+      min: 0,
+    },
+    is_daily_special: {
+      type: Boolean, // Plat du jour ou mis en avant
+      default: false,
+    },
+    extras: [{
+      name: { type: String, required: true },
+      price: { type: Number, required: true, min: 0 }
+    }],
   },
   {
     timestamps: true,
@@ -36,8 +53,9 @@ const dishSchema = new mongoose.Schema(
 );
 
 // Index for faster queries
-dishSchema.index({ categorie_id: 1 });
-dishSchema.index({ disponible: 1 });
-dishSchema.index({ nom: 1 });
+dishSchema.index({ restaurant_id: 1 });
+dishSchema.index({ category_id: 1 });
+dishSchema.index({ is_available: 1 });
+dishSchema.index({ name: 1 });
 
 module.exports = mongoose.model('Dish', dishSchema);

@@ -17,13 +17,14 @@ class SessionService {
       // Create client session
       const session = new ClientSession({
         table_id: table._id,
+        restaurant_id: table.restaurant_id,
       });
 
       await session.save();
       logger.info('Client session created from QR code', {
         sessionId: session.session_id,
         tableId: table._id,
-        tableNumber: table.numero,
+        tableNumber: table.table_number,
       });
 
       return session;

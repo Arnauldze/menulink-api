@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { upload, handleMulterError } = require('../middleware/multer');
 const DishController = require('../controllers/DishController');
+const authMiddleware = require('../middleware/auth');
 
 /**
  * @swagger
@@ -47,14 +48,15 @@ const DishController = require('../controllers/DishController');
  *                 type: number
  *               categorie_id:
  *                 type: string
- *               image_url:
+ *               image:
  *                 type: string
+ *                 format: binary
  *     responses:
  *       201:
  *         description: Dish created successfully
  */
-router.get('/', DishController.getDishes.bind(DishController));
-router.post('/', DishController.createDish.bind(DishController));
+router.get('/', DishController.getDishes.bind(DishController)); // Public
+router.post('/', authMiddleware, upload.single('image'), DishController.createDish.bind(DishController));
 
 /**
  * @swagger
@@ -113,9 +115,9 @@ router.post('/', DishController.createDish.bind(DishController));
  *       200:
  *         description: Dish deleted successfully
  */
-router.get('/:id', DishController.getDish.bind(DishController));
-router.put('/:id', DishController.updateDish.bind(DishController));
-router.delete('/:id', DishController.deleteDish.bind(DishController));
+router.get('/:id', DishController.getDish.bind(DishController)); // Public
+router.put('/:id', authMiddleware, DishController.updateDish.bind(DishController));
+router.delete('/:id', authMiddleware, DishController.deleteDish.bind(DishController));
 
 /**
  * @swagger
@@ -143,7 +145,7 @@ router.delete('/:id', DishController.deleteDish.bind(DishController));
  *       200:
  *         description: Image uploaded successfully
  */
-router.post('/:id/image', upload.single('image'), DishController.uploadImage.bind(DishController));
+router.post('/:id/image', authMiddleware, upload.single('image'), DishController.uploadImage.bind(DishController));
 
 /**
  * @swagger
@@ -161,7 +163,7 @@ router.post('/:id/image', upload.single('image'), DishController.uploadImage.bin
  *       200:
  *         description: Availability toggled
  */
-router.patch('/:id/availability', DishController.toggleAvailability.bind(DishController));
+router.patch('/:id/availability', authMiddleware, DishController.toggleAvailability.bind(DishController));
 
 // Error handling for multer
 router.use(handleMulterError);

@@ -34,78 +34,29 @@ const CategoryController = require('../controllers/CategoryController');
  *             type: object
  *             required:
  *               - menu_id
- *               - nom
+ *               - name
  *             properties:
  *               menu_id:
  *                 type: string
- *               nom:
+ *               name:
  *                 type: string
- *               ordre_affichage:
+ *               display_order:
  *                 type: integer
  *     responses:
  *       201:
  *         description: Category created
  */
-router.get('/', CategoryController.listCategories.bind(CategoryController));
-router.post('/', CategoryController.createCategory.bind(CategoryController));
+const authMiddleware = require('../middleware/auth');
 
-/**
- * @swagger
- * /categories/{id}:
- *   get:
- *     summary: Get category by ID
- *     tags: [Categories]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Category details
- *       404:
- *         description: Not found
- *   put:
- *     summary: Update category
- *     tags: [Categories]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               nom:
- *                 type: string
- *               ordre_affichage:
- *                 type: integer
- *     responses:
- *       200:
- *         description: Category updated
- *   delete:
- *     summary: Delete category (must be empty)
- *     tags: [Categories]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Category deleted
- *       400:
- *         description: Cannot delete if not empty
- */
-router.get('/:id', CategoryController.getCategory.bind(CategoryController));
-router.put('/:id', CategoryController.updateCategory.bind(CategoryController));
-router.delete('/:id', CategoryController.deleteCategory.bind(CategoryController));
+// ...
+
+router.get('/', CategoryController.listCategories.bind(CategoryController)); // Public
+router.post('/', authMiddleware, CategoryController.createCategory.bind(CategoryController));
+
+// ...
+
+router.get('/:id', CategoryController.getCategory.bind(CategoryController)); // Public
+router.put('/:id', authMiddleware, CategoryController.updateCategory.bind(CategoryController));
+router.delete('/:id', authMiddleware, CategoryController.deleteCategory.bind(CategoryController));
 
 module.exports = router;

@@ -2,15 +2,16 @@ openapi: 3.0.3
 info:
   title: Menu Link API
   description: |
-    API backend pour l'application de gestion de restaurant avec menu digital accessible via QR code.
+    API backend pour l'application SaaS de gestion de restaurant avec menu digital.
     
     ## Fonctionnalités
-    - Scan de QR code pour accéder au menu
-    - Menu digital avec catégories et plats
-    - Gestion des sessions clients
+    - Multi-Restaurants (SaaS)
+    - Gestion du compte Gérant et du Staff (Caissiers, Cuisine, Serveurs)
+    - Prise de commande par QR code 
+    - Séparation des vues (Client public vs Staff privé)
     
     ## Authentification
-    Actuellement, l'API ne nécessite pas d'authentification pour les endpoints publics (menu, sessions).
+    Cette API utilise un système de jetons JWT. Un bouton "Authorize" se trouve ci-dessous pour inclure votre JWT dans les requêtes protégées. Les endpoints publics (ex: vue du menu depuis un QR code) ne nécessitent pas de token.
     
   version: 1.0.0
 
@@ -25,15 +26,25 @@ servers:
 
 tags:
   - name: Health
-    description: Health check endpoints
-  - name: Sessions
-    description: Client session management via QR code
+    description: Vérification de l'état du serveur
+  - name: Authentication
+    description: Inscription SaaS et Connexion des utilisateurs (Gérant, Staff)
+  - name: Restaurant
+    description: Gestion globale du restaurant
+  - name: Staff
+    description: Gestion des employés (Serveurs, Caissiers, Cuisiniers)
+  - name: Tables
+    description: Gestion de l'espace et des QR codes de table
   - name: Menu
-    description: Menu and dishes management
+    description: Gestion des différentes cartes du restaurant
   - name: Categories
-    description: Category management (Admin)
+    description: Gestion des catégories de plats
   - name: Dishes
-    description: Dish management (Admin)
+    description: Gestion des plats et de leur disponibilité
+  - name: Sessions
+    description: Gestion de la présence à table d'un client (Scan QR)
+  - name: Orders
+    description: Flux de commande (Client -> Cuisine -> Service -> Caisse)
 
 paths:
   /health:
@@ -98,20 +109,70 @@ paths:
                   data:
                     type: object
                     properties:
-                      session_id:
-                        type: string
-                        format: uuid
-                        example: "550e8400-e29b-41d4-a716-446655440000"
-                      table_id:
-                        type: string
-                        example: "507f1f77bcf86cd799439011"
-                      started_at:
-                        type: string
-                        format: date-time
-                        example: "2024-01-26T10:30:00.000Z"
+                      session:
+                        type: object
+                        properties:
+                          session_id:
+                            type: string
+                            format: uuid
+                            example: "550e8400-e29b-41d4-a716-446655440000"
+                          table_id:
+                            type: string
+                            example: "507f1f77bcf86cd799439011"
+                          restaurant_id:
+                            type: string
+                            example: "507f1f77bcf86cd799439000"
+                          started_at:
+                            type: string
+                            example: "14/03/2026 05:21:40"
+                      restaurant:
+                        type: object
+                        properties:
+                          _id:
+                            type: string
+                            example: "507f1f77bcf86cd799439000"
+                          name:
+                            type: string
+                            example: "La Pizzeria"
+                          phone:
+                            type: string
+                            example: "+33600000000"
+                          address:
+                            type: string
+                            example: "10 Rue de la Paix, Paris"
+                          opening_time:
+                            type: string
+                            example: "10:00"
+                          closing_time:
+                            type: string
+                            example: "23:00"
+                          welcome_banner:
+                            type: string
+                            example: "Welcome to our restaurant! Enjoy your meal."
+                      menu:
+                        type: object
+                        properties:
+                          categories:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                _id:
+                                  type: string
+                                name:
+                                  type: string
+                                display_order:
+                                  type: integer
+                                dishes:
+                                  type: array
+                                  items:
+                                    type: object
+                          totalDishes:
+                            type: integer
+                            example: 0
                   message:
                     type: string
-                    example: "Session created successfully"
+                    example: "Session created and menu retrieved successfully"
         '400':
           description: QR code manquant
           content:
@@ -271,14 +332,14 @@ paths:
                     data:
                       categories:
                         - _id: "507f1f77bcf86cd799439011"
-                          nom: "Entrées"
-                          ordre_affichage: 0
+                          name: "Entrées"
+                          display_order: 0
                           dishes:
                             - _id: "507f1f77bcf86cd799439012"
-                              nom: "Salade César"
+                              name: "Salade César"
                               description: "Salade fraîche avec croutons"
-                              prix: 8.99
-                              disponible: true
+                              price: 8.99
+                              is_available: true
                               image_url: null
                       totalDishes: 10
                     message: "Menu retrieved successfully"
@@ -347,10 +408,10 @@ paths:
             schema:
               type: object
               properties:
-                nom:
+                name:
                   type: string
                   example: "Menu Spécial"
-                actif:
+                is_active:
                   type: boolean
                   example: false
       responses:
@@ -413,13 +474,13 @@ paths:
             schema:
               type: object
               required:
-                - nom
-                - gestionnaire_id
+                - name
+                - manager_id
               properties:
-                nom:
+                name:
                   type: string
                   example: "Menu du Jour"
-                gestionnaire_id:
+                manager_id:
                   type: string
                   example: "507f1f77bcf86cd799439010"
       responses:
@@ -490,15 +551,15 @@ paths:
               type: object
               required:
                 - menu_id
-                - nom
+                - name
               properties:
                 menu_id:
                   type: string
                   example: "507f1f77bcf86cd799439011"
-                nom:
+                name:
                   type: string
                   example: "Entrées"
-                ordre_affichage:
+                display_order:
                   type: integer
                   example: 0
       responses:
@@ -574,10 +635,10 @@ paths:
             schema:
               type: object
               properties:
-                nom:
+                name:
                   type: string
                   example: "Plats Principaux"
-                ordre_affichage:
+                display_order:
                   type: integer
                   example: 1
       responses:
@@ -676,21 +737,21 @@ paths:
             schema:
               type: object
               required:
-                - nom
-                - prix
-                - categorie_id
+                - name
+                - price
+                - category_id
               properties:
-                nom:
+                name:
                   type: string
                   example: "Ndolé"
                 description:
                   type: string
                   example: "Feuilles de ndolé aux arachides avec viande"
-                prix:
+                price:
                   type: number
                   format: float
                   example: 3000
-                categorie_id:
+                category_id:
                   type: string
                   example: "507f1f77bcf86cd799439011"
                 image_url:
@@ -769,17 +830,17 @@ paths:
             schema:
               type: object
               properties:
-                nom:
+                name:
                   type: string
                   example: "Poulet DG"
                 description:
                   type: string
                   example: "Poulet Directeur Général avec plantains"
-                prix:
+                price:
                   type: number
                   format: float
                   example: 4000
-                disponible:
+                is_available:
                   type: boolean
                   example: true
                 image_url:
@@ -890,13 +951,13 @@ components:
         _id:
           type: string
           example: "507f1f77bcf86cd799439011"
-        nom:
+        name:
           type: string
           example: "Menu Principal"
-        actif:
+        is_active:
           type: boolean
           example: true
-        gestionnaire_id:
+        manager_id:
           type: string
           example: "507f1f77bcf86cd799439010"
         createdAt:
@@ -915,10 +976,10 @@ components:
         menu_id:
           type: string
           example: "507f1f77bcf86cd799439010"
-        nom:
+        name:
           type: string
           example: "Entrées"
-        ordre_affichage:
+        display_order:
           type: integer
           example: 0
     
@@ -928,10 +989,10 @@ components:
         _id:
           type: string
           example: "507f1f77bcf86cd799439011"
-        nom:
+        name:
           type: string
           example: "Entrées"
-        ordre_affichage:
+        display_order:
           type: integer
           example: 0
         dishes:
@@ -945,20 +1006,27 @@ components:
         _id:
           type: string
           example: "507f1f77bcf86cd799439012"
-        nom:
+        name:
           type: string
           example: "Salade César"
         description:
           type: string
           example: "Salade fraîche avec croutons"
-        prix:
+        price:
           type: number
           format: float
           example: 8.99
-        disponible:
+        is_available:
           type: boolean
           example: true
         image_url:
           type: string
           nullable: true
           example: "https://example.com/images/salade-cesar.jpg"
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []

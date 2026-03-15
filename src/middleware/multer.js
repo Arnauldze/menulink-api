@@ -29,7 +29,6 @@ const handleMulterError = (err, req, res, next) => {
       return res.status(400).json({
         success: false,
         error: {
-          code: 'FILE_TOO_LARGE',
           message: 'File size exceeds 5MB limit',
         },
       });
@@ -37,20 +36,14 @@ const handleMulterError = (err, req, res, next) => {
     return res.status(400).json({
       success: false,
       error: {
-        code: 'UPLOAD_ERROR',
         message: err.message,
       },
     });
   }
 
+  // If it's another type of error, pass it to the global error handler
   if (err) {
-    return res.status(400).json({
-      success: false,
-      error: {
-        code: 'UPLOAD_ERROR',
-        message: err.message,
-      },
-    });
+    return next(err);
   }
 
   next();

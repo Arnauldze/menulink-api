@@ -6,30 +6,31 @@ class TableService {
   /**
    * Create a new table with QR code
    */
-  async createTable(numero) {
+  async createTable(restaurantId, table_number) {
     try {
-      // Check if table already exists
-      const existingTable = await Table.findOne({ numero });
+      // Check if table already exists in THIS restaurant
+      const existingTable = await Table.findOne({ restaurant_id: restaurantId, table_number });
       if (existingTable) {
-        throw new Error(`Table ${numero} already exists`);
+        throw new Error(`Table ${table_number} already exists`);
       }
 
-      // Generate QR code data (contains table ID for scanning)
-      const qrCodeData = `table_${numero}_${Date.now()}`;
+      // Generate QR code data (contains restaurant ID and table ID for scanning)
+      const qrCodeData = `resto_${restaurantId}_table_${table_number}_${Date.now()}`;
 
       // Create table
       const table = new Table({
-        numero,
+        restaurant_id: restaurantId,
+        table_number,
         qr_code: qrCodeData,
         active: true,
       });
 
       await table.save();
-      logger.info('Table created', { numero, tableId: table._id });
+      logger.info('Table created', { table_number, tableId: table._id });
 
       return table;
     } catch (error) {
-      logger.error('Error creating table', { error: error.message, numero });
+      logger.error('Error creating table', { error: error.message, table_number });
       throw error;
     }
   }
@@ -53,9 +54,9 @@ class TableService {
   /**
    * Get table by ID
    */
-  async getTableById(tableId) {
+  async getTableById(restaurantId, tableId) {
     try {
-      const table = await Table.findById(tableId);
+      const table = await Table.findOne({ _id: tableId, restaurant_id: restaurantId });
       if (!table) {
         throw new Error('Table not found');
       }
@@ -69,9 +70,9 @@ class TableService {
   /**
    * Get all tables
    */
-  async getAllTables() {
+  async getAllTables(restaurantId) {
     try {
-      const tables = await Table.find().sort({ numero: 1 });
+      const tables = await Table.find({ restaurant_id: restaurantId }).sort({ table_number: 1 });
       return tables;
     } catch (error) {
       logger.error('Error getting all tables', { error: error.message });
@@ -82,9 +83,9 @@ class TableService {
   /**
    * Update table
    */
-  async updateTable(tableId, updateData) {
+  async updateTable(restaurantId, tableId, updateData) {
     try {
-      const table = await Table.findByIdAndUpdate(tableId, updateData, { new: true });
+      const table = await Table.findOneAndUpdate({ _id: tableId, restaurant_id: restaurantId }, updateData, { new: true });
       if (!table) {
         throw new Error('Table not found');
       }
@@ -99,9 +100,9 @@ class TableService {
   /**
    * Delete table
    */
-  async deleteTable(tableId) {
+  async deleteTable(restaurantId, tableId) {
     try {
-      const table = await Table.findByIdAndDelete(tableId);
+      const table = await Table.findOneAndDelete({ _id: tableId, restaurant_id: restaurantId });
       if (!table) {
         throw new Error('Table not found');
       }

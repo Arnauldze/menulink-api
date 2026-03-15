@@ -14,6 +14,9 @@ const orderRoutes = require('./routes/orders');
 const dishRoutes = require('./routes/dishes');
 const categoryRoutes = require('./routes/categories');
 const tableRoutes = require('./routes/tables');
+const restaurantRoutes = require('./routes/restaurant');
+const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/users');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -45,6 +48,9 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/dishes', dishRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/tables', tableRoutes);
+app.use('/api/restaurant', restaurantRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 
 // 404 handler
 app.use((req, res) => {

@@ -3,6 +3,11 @@ const { v4: uuidv4 } = require('uuid');
 
 const clientSessionSchema = new mongoose.Schema(
   {
+    restaurant_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Restaurant',
+      required: true,
+    },
     session_id: {
       type: String,
       default: uuidv4,
@@ -25,6 +30,7 @@ const clientSessionSchema = new mongoose.Schema(
 );
 
 // Index for faster queries
+clientSessionSchema.index({ restaurant_id: 1 });
 clientSessionSchema.index({ session_id: 1 });
 clientSessionSchema.index({ table_id: 1 });
 

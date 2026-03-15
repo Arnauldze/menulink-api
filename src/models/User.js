@@ -14,14 +14,22 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+    phone: {
+      type: String,
+      trim: true,
+    },
+    restaurant_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Restaurant',
+      required: true,
+    },
     password_hash: {
       type: String,
       required: true,
     },
     role: {
-      type: String,
-      enum: ['PERSONNEL', 'GESTIONNAIRE', 'CLIENT'],
-      default: 'CLIENT',
+      type: String, // Libéré de l'enum strict pour permettre des rôles personnalisés
+      default: 'WAITER',
     },
     created_at: {
       type: Date,

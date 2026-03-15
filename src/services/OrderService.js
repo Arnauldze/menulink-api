@@ -27,24 +27,40 @@ class OrderService {
                     throw new Error(`Dish with ID ${item.dish_id} not found`);
                 }
 
-                if (!dish.disponible) {
-                    throw new Error(`Dish "${dish.nom}" is currently unavailable`);
+                if (!dish.is_available) {
+                    throw new Error(`Dish "${dish.name}" is currently unavailable`);
                 }
 
-                const itemTotal = dish.prix * item.quantity;
+                let itemTotal = dish.price * item.quantity;
+                const formattedExtras = [];
+
+                if (item.selected_extras && item.selected_extras.length > 0) {
+                    for (const extra of item.selected_extras) {
+                        // Verify the extra exists for this dish to prevent price tampering
+                        const validExtra = dish.extras.find(e => e.name === extra.name);
+                        if (!validExtra) {
+                            throw new Error(`Extra "${extra.name}" is not valid for dish "${dish.name}"`);
+                        }
+                        itemTotal += validExtra.price * item.quantity;
+                        formattedExtras.push({ name: validExtra.name, price: validExtra.price });
+                    }
+                }
+
                 calculatedTotal += itemTotal;
 
                 orderItems.push({
                     dish_id: dish._id,
-                    name: dish.nom,
+                    name: dish.name,
                     quantity: item.quantity,
-                    price: dish.prix,
+                    price: dish.price,
+                    selected_extras: formattedExtras,
                     comment: item.comment || ''
                 });
             }
 
             // 3. Create Order
             const order = new Order({
+                restaurant_id: session.restaurant_id,
                 table_id: session.table_id,
                 session_id: sessionId,
                 items: orderItems,
@@ -97,17 +113,36 @@ class OrderService {
     }
 
     /**
+     * Get orders for the kitchen/admin view (Only for a specific restaurant)
+     */
+    async getRestaurantOrders(restaurantId) {
+        try {
+            // Get all orders that are not PAID or CANCELLED for this restaurant
+            const orders = await Order.find({
+                restaurant_id: restaurantId,
+                status: { $nin: ['PAID', 'CANCELLED'] }
+            })
+                .populate('table_id', 'table_number')
+                .sort({ createdAt: -1 });
+            return orders;
+        } catch (error) {
+            logger.error('Error getting restaurant orders', { error: error.message });
+            throw error;
+        }
+    }
+
+    /**
      * Update order status
      */
-    async updateOrderStatus(orderId, status) {
+    async updateOrderStatus(restaurantId, orderId, status) {
         try {
             const allowedStatuses = ['PENDING', 'PREPARING', 'READY', 'SERVED', 'PAID', 'CANCELLED'];
             if (!allowedStatuses.includes(status)) {
                 throw new Error(`Invalid status: ${status}`);
             }
 
-            const order = await Order.findByIdAndUpdate(
-                orderId,
+            const order = await Order.findOneAndUpdate(
+                { _id: orderId, restaurant_id: restaurantId },
                 { status },
                 { new: true }
             );

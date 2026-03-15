@@ -89,6 +89,13 @@ qr_codes_production/
 # ===========================
 generate_qr_files.js
 generate_qr_production.js
+check_qr_codes.js
+seed_real_data.js
+seed_error.log
+test_dates.js
+test_order_flow.js
+test_output.txt
+test_saas.js
 
 # ===========================
 # Docker (not needed for EC2 direct deploy)

@@ -59,8 +59,15 @@ const OrderController = require('../controllers/OrderController');
  *       200:
  *         description: List of orders
  */
+const authMiddleware = require('../middleware/auth');
+
+// Public route: placed by anonymous client via QRCode Session
 router.post('/', OrderController.createOrder.bind(OrderController));
+// Public route: client view
 router.get('/', OrderController.listOrders.bind(OrderController));
+
+// Protected route: Kitchen getting all active orders
+router.get('/kitchen', authMiddleware, OrderController.getRestaurantOrders.bind(OrderController));
 
 /**
  * @swagger
@@ -110,6 +117,6 @@ router.get('/:id', OrderController.getOrder.bind(OrderController));
  *       200:
  *         description: Status updated
  */
-router.patch('/:id/status', OrderController.updateStatus.bind(OrderController));
+router.patch('/:id/status', authMiddleware, OrderController.updateStatus.bind(OrderController));
 
 module.exports = router;

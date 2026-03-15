@@ -7,15 +7,26 @@ class CategoryService {
     /**
      * Create a new category
      */
-    async createCategory(menuId, nom, ordre = 0) {
+    async createCategory(restaurantId, menuId, name, ordre = 0) {
         try {
+            // Vérifier si la catégorie existe déjà (insensible à la casse)
+            const existingCategory = await Category.findOne({
+                restaurant_id: restaurantId,
+                name: { $regex: new RegExp('^' + name + '$', 'i') }
+            });
+
+            if (existingCategory) {
+                throw new Error("Une catégorie avec ce nom existe déjà pour votre restaurant.");
+            }
+
             const category = new Category({
+                restaurant_id: restaurantId,
                 menu_id: menuId,
-                nom,
-                ordre_affichage: ordre
+                name,
+                display_order: ordre
             });
             await category.save();
-            logger.info('Category created', { categoryId: category._id, nom });
+            logger.info('Category created', { categoryId: category._id, name });
             return category;
         } catch (error) {
             logger.error('Error creating category', { error: error.message });
@@ -26,9 +37,9 @@ class CategoryService {
     /**
      * Get category by ID
      */
-    async getCategoryById(categoryId) {
+    async getCategoryById(restaurantId, categoryId) {
         try {
-            const category = await Category.findById(categoryId);
+            const category = await Category.findOne({ _id: categoryId, restaurant_id: restaurantId });
             if (!category) {
                 throw new Error('Category not found');
             }
@@ -42,9 +53,13 @@ class CategoryService {
     /**
      * Update category
      */
-    async updateCategory(categoryId, updateData) {
+    async updateCategory(restaurantId, categoryId, updateData) {
         try {
-            const category = await Category.findByIdAndUpdate(categoryId, updateData, { new: true });
+            const category = await Category.findOneAndUpdate(
+                { _id: categoryId, restaurant_id: restaurantId },
+                updateData,
+                { new: true }
+            );
             if (!category) {
                 throw new Error('Category not found');
             }
@@ -59,15 +74,15 @@ class CategoryService {
     /**
      * Delete category (and optionally dishes)
      */
-    async deleteCategory(categoryId) {
+    async deleteCategory(restaurantId, categoryId) {
         try {
             // Check if dishes exist
-            const dishesCount = await Dish.countDocuments({ categorie_id: categoryId });
+            const dishesCount = await Dish.countDocuments({ category_id: categoryId, restaurant_id: restaurantId });
             if (dishesCount > 0) {
                 throw new Error(`Cannot delete category: contains ${dishesCount} dishes. Delete them first.`);
             }
 
-            const category = await Category.findByIdAndDelete(categoryId);
+            const category = await Category.findOneAndDelete({ _id: categoryId, restaurant_id: restaurantId });
             if (!category) {
                 throw new Error('Category not found');
             }
@@ -82,10 +97,13 @@ class CategoryService {
     /**
      * List all categories (optionally for a specific menu)
      */
-    async listCategories(menuId) {
+    async listCategories(restaurantId, menuId) {
         try {
-            const query = menuId ? { menu_id: menuId } : {};
-            const categories = await Category.find(query).sort({ ordre_affichage: 1 });
+            const query = { restaurant_id: restaurantId };
+            if (menuId) {
+                query.menu_id = menuId;
+            }
+            const categories = await Category.find(query).sort({ display_order: 1 });
             return categories;
         } catch (error) {
             logger.error('Error listing categories', { error: error.message });

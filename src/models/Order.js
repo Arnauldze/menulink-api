@@ -23,11 +23,20 @@ const orderItemSchema = new mongoose.Schema({
     comment: {
         type: String,
         trim: true
-    }
+    },
+    selected_extras: [{
+        name: { type: String, required: true },
+        price: { type: Number, required: true, min: 0 }
+    }]
 }, { _id: false });
 
 const orderSchema = new mongoose.Schema(
     {
+        restaurant_id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Restaurant',
+            required: true,
+        },
         table_id: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Table',
@@ -64,6 +73,7 @@ const orderSchema = new mongoose.Schema(
 );
 
 // Indexes
+orderSchema.index({ restaurant_id: 1 });
 orderSchema.index({ table_id: 1 });
 orderSchema.index({ session_id: 1 });
 orderSchema.index({ status: 1 });

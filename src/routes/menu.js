@@ -9,12 +9,19 @@ const MenuController = require('../controllers/MenuController');
  *   description: Menu retrieval and management
  */
 
+const authMiddleware = require('../middleware/auth');
+
 /**
  * @swagger
  * /menu:
  *   get:
  *     summary: Get complete menu with all categories and dishes
  *     tags: [Menu]
+ *     parameters:
+ *       - in: query
+ *         name: restaurant_id
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: The complete active menu
@@ -41,18 +48,18 @@ router.get('/:id', MenuController.getMenuById.bind(MenuController));
  * POST /api/menus
  * Create new menu
  */
-router.post('/', MenuController.createMenu.bind(MenuController));
+router.post('/', authMiddleware, MenuController.createMenu.bind(MenuController));
 
 /**
  * PUT /api/menus/:id
  * Update menu
  */
-router.put('/:id', MenuController.updateMenu.bind(MenuController));
+router.put('/:id', authMiddleware, MenuController.updateMenu.bind(MenuController));
 
 /**
  * DELETE /api/menus/:id
  * Delete menu
  */
-router.delete('/:id', MenuController.deleteMenu.bind(MenuController));
+router.delete('/:id', authMiddleware, MenuController.deleteMenu.bind(MenuController));
 
 module.exports = router;

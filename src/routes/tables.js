@@ -37,8 +37,10 @@ const TableController = require('../controllers/TableController');
  *       201:
  *         description: Table created
  */
-router.get('/', TableController.listTables.bind(TableController));
-router.post('/', TableController.createTable.bind(TableController));
+const authMiddleware = require('../middleware/auth');
+
+router.get('/', authMiddleware, TableController.listTables.bind(TableController));
+router.post('/', authMiddleware, TableController.createTable.bind(TableController));
 
 /**
  * @swagger
@@ -56,7 +58,7 @@ router.post('/', TableController.createTable.bind(TableController));
  *       200:
  *         description: QR Code data
  */
-router.get('/:id/qr', TableController.getTableQRCode.bind(TableController));
+router.get('/:id/qr', authMiddleware, TableController.getTableQRCode.bind(TableController));
 
 /**
  * @swagger
@@ -74,6 +76,6 @@ router.get('/:id/qr', TableController.getTableQRCode.bind(TableController));
  *       200:
  *         description: Table deleted
  */
-router.delete('/:id', TableController.deleteTable.bind(TableController));
+router.delete('/:id', authMiddleware, TableController.deleteTable.bind(TableController));
 
 module.exports = router;

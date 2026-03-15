@@ -3,17 +3,22 @@ require('./Menu');
 
 const categorySchema = new mongoose.Schema(
   {
+    restaurant_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Restaurant',
+      required: true,
+    },
     menu_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Menu',
       required: true,
     },
-    nom: {
+    name: {
       type: String,
       required: true,
       trim: true,
     },
-    ordre_affichage: {
+    display_order: {
       type: Number,
       default: 0,
     },
@@ -24,7 +29,8 @@ const categorySchema = new mongoose.Schema(
 );
 
 // Index for faster queries
+categorySchema.index({ restaurant_id: 1 });
 categorySchema.index({ menu_id: 1 });
-categorySchema.index({ ordre_affichage: 1 });
+categorySchema.index({ display_order: 1 });
 
 module.exports = mongoose.model('Category', categorySchema);

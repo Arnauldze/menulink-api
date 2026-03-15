@@ -6,25 +6,29 @@ class DishService {
   /**
    * Create new dish
    */
-  async createDish(dishData) {
+  async createDish(restaurantId, dishData) {
     try {
       // Verify category exists
-      const category = await Category.findById(dishData.categorie_id);
+      const category = await Category.findById(dishData.category_id);
       if (!category) {
         throw new Error('Category not found');
       }
 
       const dish = new Dish({
-        nom: dishData.nom,
+        restaurant_id: restaurantId,
+        name: dishData.name,
         description: dishData.description,
-        prix: dishData.prix,
-        categorie_id: dishData.categorie_id,
-        disponible: dishData.disponible !== false,
+        price: dishData.price,
+        category_id: dishData.category_id,
+        is_available: dishData.is_available !== false,
         image_url: dishData.image_url,
+        prep_time: dishData.prep_time,
+        is_daily_special: dishData.is_daily_special || false,
+        extras: dishData.extras || [],
       });
 
       await dish.save();
-      logger.info('Dish created', { dishId: dish._id, nom: dish.nom });
+      logger.info('Dish created', { dishId: dish._id, name: dish.name });
       return dish;
     } catch (error) {
       logger.error('Error creating dish', { error: error.message });
@@ -35,9 +39,9 @@ class DishService {
   /**
    * Get dish by ID
    */
-  async getDishById(dishId) {
+  async getDishById(restaurantId, dishId) {
     try {
-      const dish = await Dish.findById(dishId).populate('categorie_id');
+      const dish = await Dish.findOne({ _id: dishId, restaurant_id: restaurantId }).populate('category_id');
       if (!dish) {
         throw new Error('Dish not found');
       }
@@ -49,27 +53,36 @@ class DishService {
   }
 
   /**
-   * Get all dishes by category
+   * Get dishes with filtering and pagination
    */
-  async getDishesByCategory(categoryId) {
+  async getDishes(restaurantId, category_id, page = 1, limit = 10) {
     try {
-      const dishes = await Dish.find({ categorie_id: categoryId, disponible: true });
-      return dishes;
-    } catch (error) {
-      logger.error('Error getting dishes by category', { error: error.message });
-      throw error;
-    }
-  }
+      const query = { restaurant_id: restaurantId };
+      if (category_id) {
+        query.category_id = category_id;
+        query.is_available = true; // usually when filtering by category (client side), we only want available dishes
+      }
 
-  /**
-   * Get all dishes
-   */
-  async getAllDishes() {
-    try {
-      const dishes = await Dish.find().populate('categorie_id');
-      return dishes;
+      const skip = (page - 1) * limit;
+
+      const [dishes, total] = await Promise.all([
+        Dish.find(query)
+          .populate('category_id')
+          .skip(skip)
+          .limit(limit)
+          .sort({ createdAt: -1 }),
+        Dish.countDocuments(query)
+      ]);
+
+      return {
+        dishes,
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / limit)
+      };
     } catch (error) {
-      logger.error('Error getting all dishes', { error: error.message });
+      logger.error('Error getting dishes', { error: error.message });
       throw error;
     }
   }
@@ -77,9 +90,13 @@ class DishService {
   /**
    * Update dish
    */
-  async updateDish(dishId, updateData) {
+  async updateDish(restaurantId, dishId, updateData) {
     try {
-      const dish = await Dish.findByIdAndUpdate(dishId, updateData, { new: true });
+      const dish = await Dish.findOneAndUpdate(
+        { _id: dishId, restaurant_id: restaurantId },
+        updateData,
+        { new: true }
+      );
       if (!dish) {
         throw new Error('Dish not found');
       }
@@ -94,17 +111,17 @@ class DishService {
   /**
    * Toggle dish availability
    */
-  async toggleAvailability(dishId) {
+  async toggleAvailability(restaurantId, dishId) {
     try {
-      const dish = await Dish.findById(dishId);
+      const dish = await Dish.findOne({ _id: dishId, restaurant_id: restaurantId });
       if (!dish) {
         throw new Error('Dish not found');
       }
 
-      dish.disponible = !dish.disponible;
+      dish.is_available = !dish.is_available;
       await dish.save();
 
-      logger.info('Dish availability toggled', { dishId, disponible: dish.disponible });
+      logger.info('Dish availability toggled', { dishId, is_available: dish.is_available });
       return dish;
     } catch (error) {
       logger.error('Error toggling dish availability', { error: error.message });
@@ -115,9 +132,9 @@ class DishService {
   /**
    * Delete dish
    */
-  async deleteDish(dishId) {
+  async deleteDish(restaurantId, dishId) {
     try {
-      const dish = await Dish.findByIdAndDelete(dishId);
+      const dish = await Dish.findOneAndDelete({ _id: dishId, restaurant_id: restaurantId });
       if (!dish) {
         throw new Error('Dish not found');
       }

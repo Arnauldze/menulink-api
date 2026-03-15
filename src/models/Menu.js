@@ -3,16 +3,21 @@ require('./User');
 
 const menuSchema = new mongoose.Schema(
   {
-    nom: {
+    restaurant_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Restaurant',
+      required: true,
+    },
+    name: {
       type: String,
       required: true,
       trim: true,
     },
-    actif: {
+    is_active: {
       type: Boolean,
       default: true,
     },
-    gestionnaire_id: {
+    manager_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
@@ -24,7 +29,8 @@ const menuSchema = new mongoose.Schema(
 );
 
 // Index for faster queries
-menuSchema.index({ gestionnaire_id: 1 });
-menuSchema.index({ actif: 1 });
+menuSchema.index({ restaurant_id: 1 });
+menuSchema.index({ manager_id: 1 });
+menuSchema.index({ is_active: 1 });
 
 module.exports = mongoose.model('Menu', menuSchema);

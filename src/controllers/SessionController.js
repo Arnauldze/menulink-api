@@ -2,6 +2,8 @@ const SessionService = require('../services/SessionService');
 const logger = require('../utils/logger');
 
 const MenuService = require('../services/MenuService');
+const { formatDate } = require('../utils/dateFormatter');
+const Restaurant = require('../models/Restaurant');
 
 class SessionController {
   /**
@@ -15,19 +17,19 @@ class SessionController {
       if (!qr_code) {
         return res.status(400).json({
           success: false,
-          error: {
-            code: 'MISSING_QR_CODE',
-            message: 'QR code is required',
-          },
+          error: { message: error.message || 'An error occurred' },
         });
       }
 
       // 1. Create the session
       const session = await SessionService.createSessionFromQRCode(qr_code);
 
-      // 2. Fetch the menu
-      // In a real multi-restaurant app, we would fetch the menu linked to this specific table/restaurant
-      const menu = await MenuService.getCompleteMenu();
+      // 2. Fetch the menu for this specific restaurant
+      const menu = await MenuService.getCompleteMenu(session.restaurant_id);
+
+      // 3. Fetch public restaurant info for the banner/message
+      const restaurant = await Restaurant.findById(session.restaurant_id)
+        .select('name address concept_type welcome_banner opening_time closing_time is_24h phone email');
 
       res.status(201).json({
         success: true,
@@ -35,14 +37,16 @@ class SessionController {
           session: {
             session_id: session.session_id,
             table_id: session.table_id,
-            started_at: session.started_at,
+            restaurant_id: session.restaurant_id,
+            started_at: formatDate(session.started_at),
           },
+          restaurant: restaurant,
           menu: menu, // Include the full menu directly
         },
         message: 'Session created and menu retrieved successfully',
       });
     } catch (error) {
-      logger.error('Error in createSessionFromQRCode', { error: error.message });
+      logger.error('Error in createSessionFromQRCode', { error: { message: 'An error occurred' } });
       next(error);
     }
   }
@@ -62,20 +66,17 @@ class SessionController {
         data: {
           session_id: session.session_id,
           table_id: session.table_id,
-          table_number: session.table_id.numero,
-          started_at: session.started_at,
+          table_number: session.table_id.table_number,
+          started_at: formatDate(session.started_at),
         },
         message: 'Session is valid',
       });
     } catch (error) {
-      logger.error('Error in validateSession', { error: error.message });
+      logger.error('Error in validateSession', { error: { message: 'An error occurred' } });
       if (error.message.includes('Invalid') || error.message.includes('expired')) {
         return res.status(401).json({
           success: false,
-          error: {
-            code: 'INVALID_SESSION',
-            message: error.message,
-          },
+          error: { message: error.message || 'An error occurred' },
         });
       }
       next(error);
@@ -97,7 +98,7 @@ class SessionController {
         message: 'Session ended successfully',
       });
     } catch (error) {
-      logger.error('Error in endSession', { error: error.message });
+      logger.error('Error in endSession', { error: { message: 'An error occurred' } });
       next(error);
     }
   }

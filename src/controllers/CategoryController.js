@@ -9,16 +9,16 @@ class CategoryController {
      */
     async createCategory(req, res, next) {
         try {
-            const { menu_id, nom, ordre_affichage } = req.body;
+            const { menu_id, name, display_order } = req.body;
 
-            if (!menu_id || !nom) {
+            if (!menu_id || !name) {
                 return res.status(400).json({
                     success: false,
-                    error: 'menu_id and nom are required'
+                    error: { message: 'An error occurred' }
                 });
             }
 
-            const category = await CategoryService.createCategory(menu_id, nom, ordre_affichage);
+            const category = await CategoryService.createCategory(req.user.restaurant_id, menu_id, name, display_order);
 
             res.status(201).json({
                 success: true,
@@ -26,7 +26,7 @@ class CategoryController {
                 message: 'Category created'
             });
         } catch (error) {
-            logger.error('Error creating category', { error: error.message });
+            logger.error('Error creating category', { error: { message: 'An error occurred' } });
             next(error);
         }
     }
@@ -38,7 +38,13 @@ class CategoryController {
     async listCategories(req, res, next) {
         try {
             const { menu_id } = req.query;
-            const categories = await CategoryService.listCategories(menu_id);
+            const restaurantId = req.user?.restaurant_id || req.query.restaurant_id;
+
+            if (!restaurantId) {
+                return res.status(400).json({ success: false, error: { message: 'restaurant_id missing' } });
+            }
+
+            const categories = await CategoryService.listCategories(restaurantId, menu_id);
 
             res.status(200).json({
                 success: true,
@@ -46,7 +52,7 @@ class CategoryController {
                 data: categories
             });
         } catch (error) {
-            logger.error('Error listing categories', { error: error.message });
+            logger.error('Error listing categories', { error: { message: 'An error occurred' } });
             next(error);
         }
     }
@@ -58,7 +64,13 @@ class CategoryController {
     async getCategory(req, res, next) {
         try {
             const { id } = req.params;
-            const category = await CategoryService.getCategoryById(id);
+            const restaurantId = req.user?.restaurant_id || req.query.restaurant_id;
+
+            if (!restaurantId) {
+                return res.status(400).json({ success: false, error: { message: 'restaurant_id missing' } });
+            }
+
+            const category = await CategoryService.getCategoryById(restaurantId, id);
 
             res.status(200).json({
                 success: true,
@@ -66,7 +78,7 @@ class CategoryController {
             });
         } catch (error) {
             if (error.message.includes('not found')) {
-                return res.status(404).json({ success: false, error: 'Category not found' });
+                return res.status(404).json({ success: false, error: { message: 'An error occurred' } });
             }
             next(error);
         }
@@ -79,7 +91,7 @@ class CategoryController {
     async updateCategory(req, res, next) {
         try {
             const { id } = req.params;
-            const category = await CategoryService.updateCategory(id, req.body);
+            const category = await CategoryService.updateCategory(req.user.restaurant_id, id, req.body);
 
             res.status(200).json({
                 success: true,
@@ -88,7 +100,7 @@ class CategoryController {
             });
         } catch (error) {
             if (error.message.includes('not found')) {
-                return res.status(404).json({ success: false, error: 'Category not found' });
+                return res.status(404).json({ success: false, error: { message: 'An error occurred' } });
             }
             next(error);
         }
@@ -101,16 +113,16 @@ class CategoryController {
     async deleteCategory(req, res, next) {
         try {
             const { id } = req.params;
-            await CategoryService.deleteCategory(id);
+            await CategoryService.deleteCategory(req.user.restaurant_id, id);
 
             res.status(200).json({
                 success: true,
                 message: 'Category deleted'
             });
         } catch (error) {
-            logger.error('Error deleting category', { error: error.message });
+            logger.error('Error deleting category', { error: { message: 'An error occurred' } });
             if (error.message.includes('Cannot delete')) {
-                return res.status(400).json({ success: false, error: error.message });
+                return res.status(400).json({ success: false, error: { message: 'An error occurred' } });
             }
             next(error);
         }

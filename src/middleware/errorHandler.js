@@ -41,14 +41,12 @@ const errorHandler = (err, req, res, next) => {
     details = { field, value: err.keyValue[field] };
   }
 
-  // Send error response (never expose sensitive information)
+  // Send error response (strictly format to frontend spec)
   res.status(statusCode).json({
     success: false,
     error: {
-      code: errorCode,
-      message: message,
-      details: Object.keys(details).length > 0 ? details : undefined,
-    },
+      message: message
+    }
   });
 };
 
