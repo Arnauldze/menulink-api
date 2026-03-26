@@ -82,6 +82,33 @@ class DishController {
     }
 
     /**
+     * Get all dishes (Unpaginated)
+     * GET /api/dishes/all
+     */
+    async getAllDishes(req, res, next) {
+        try {
+            const { category_id, restaurant_id: queryRestaurantId, grouped } = req.query;
+            const restaurantId = req.user?.restaurant_id || queryRestaurantId;
+
+            if (!restaurantId) {
+                return res.status(400).json({ success: false, error: { message: 'restaurant_id missing' } });
+            }
+
+            const isGrouped = grouped === 'true';
+            const dishes = await DishService.getAllDishes(restaurantId, category_id, isGrouped);
+
+            res.status(200).json({
+                success: true,
+                count: dishes.length,
+                data: dishes
+            });
+        } catch (error) {
+            logger.error('Error getting all dishes', { error: { message: 'An error occurred' } });
+            next(error);
+        }
+    }
+
+    /**
      * Get single dish
      * GET /api/dishes/:id
      */

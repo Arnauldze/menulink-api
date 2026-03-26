@@ -88,6 +88,50 @@ class DishService {
   }
 
   /**
+   * Get all dishes without pagination
+   */
+  async getAllDishes(restaurantId, category_id, grouped = false) {
+    try {
+      const query = { restaurant_id: restaurantId };
+      if (category_id) {
+        query.category_id = category_id;
+        query.is_available = true;
+      }
+
+      const dishes = await Dish.find(query)
+        .populate('category_id')
+        .sort({ createdAt: -1 });
+
+      if (grouped) {
+        const groupedByCategory = dishes.reduce((acc, dish) => {
+          const catId = dish.category_id ? dish.category_id._id.toString() : 'unassigned';
+          const catName = dish.category_id ? dish.category_id.name : 'Unassigned';
+          const displayOrder = dish.category_id ? dish.category_id.display_order : 999;
+
+          if (!acc[catId]) {
+            acc[catId] = {
+              category_id: catId,
+              category_name: catName,
+              display_order: displayOrder,
+              dishes: []
+            };
+          }
+          acc[catId].dishes.push(dish);
+          return acc;
+        }, {});
+
+        // Return sorted categories
+        return Object.values(groupedByCategory).sort((a, b) => a.display_order - b.display_order);
+      }
+
+      return dishes;
+    } catch (error) {
+      logger.error('Error getting all dishes', { error: error.message });
+      throw error;
+    }
+  }
+
+  /**
    * Update dish
    */
   async updateDish(restaurantId, dishId, updateData) {

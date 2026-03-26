@@ -67,6 +67,79 @@ class UserService {
     }
 
     /**
+     * Update an employee's info (name, email, phone, role)
+     */
+    async updateEmployee(restaurantId, userId, updateData) {
+        try {
+            // Cannot update a MANAGER through this endpoint
+            const user = await User.findOne({ _id: userId, restaurant_id: restaurantId });
+            if (!user) {
+                throw new Error('Employee not found');
+            }
+            if (user.role === 'MANAGER') {
+                throw new Error('Cannot modify a MANAGER account through this endpoint');
+            }
+
+            // Prevent promoting to MANAGER
+            if (updateData.role === 'MANAGER') {
+                throw new Error('Cannot assign MANAGER role through this endpoint');
+            }
+
+            // Check email uniqueness if email is being changed
+            if (updateData.email && updateData.email !== user.email) {
+                const existingUser = await User.findOne({ email: updateData.email });
+                if (existingUser) {
+                    throw new Error('A user with this email already exists');
+                }
+            }
+
+            // Only allow updating specific fields
+            const allowedFields = ['name', 'email', 'phone', 'role'];
+            const updates = {};
+            for (const field of allowedFields) {
+                if (updateData[field] !== undefined) {
+                    updates[field] = updateData[field];
+                }
+            }
+
+            const updatedUser = await User.findByIdAndUpdate(userId, updates, { new: true })
+                .select('-password_hash');
+
+            logger.info('Employee updated', { userId, updates: Object.keys(updates) });
+            return updatedUser;
+        } catch (error) {
+            logger.error('Error updating employee', { error: error.message });
+            throw error;
+        }
+    }
+
+    /**
+     * Reset an employee's password (Manager action)
+     */
+    async resetPassword(restaurantId, userId, newPassword) {
+        try {
+            const user = await User.findOne({ _id: userId, restaurant_id: restaurantId });
+            if (!user) {
+                throw new Error('Employee not found');
+            }
+            if (user.role === 'MANAGER') {
+                throw new Error('Cannot reset MANAGER password through this endpoint');
+            }
+
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+            await User.findByIdAndUpdate(userId, { password_hash: hashedPassword });
+
+            logger.info('Employee password reset', { userId });
+            return { message: 'Password reset successfully' };
+        } catch (error) {
+            logger.error('Error resetting password', { error: error.message });
+            throw error;
+        }
+    }
+
+    /**
      * Delete an employee
      */
     async deleteEmployee(restaurantId, userId) {

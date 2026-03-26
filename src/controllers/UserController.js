@@ -84,6 +84,72 @@ class UserController {
             });
         }
     }
+
+    /**
+     * Update an employee
+     * PUT /api/users/:id
+     */
+    async updateEmployee(req, res, next) {
+        try {
+            if (req.user.role !== 'MANAGER') {
+                return res.status(403).json({
+                    success: false,
+                    error: { message: 'Only the MANAGER can update employees.' }
+                });
+            }
+
+            const { id } = req.params;
+            const updatedEmployee = await UserService.updateEmployee(req.user.restaurant_id, id, req.body);
+
+            res.status(200).json({
+                success: true,
+                message: 'Employee updated successfully',
+                data: updatedEmployee
+            });
+        } catch (error) {
+            res.status(400).json({
+                success: false,
+                error: { message: error.message }
+            });
+        }
+    }
+
+    /**
+     * Reset an employee's password
+     * PUT /api/users/:id/reset-password
+     */
+    async resetPassword(req, res, next) {
+        try {
+            if (req.user.role !== 'MANAGER') {
+                return res.status(403).json({
+                    success: false,
+                    error: { message: 'Only the MANAGER can reset passwords.' }
+                });
+            }
+
+            const { id } = req.params;
+            const { new_password } = req.body;
+
+            if (!new_password || new_password.length < 6) {
+                return res.status(400).json({
+                    success: false,
+                    error: { message: 'new_password is required and must be at least 6 characters' }
+                });
+            }
+
+            const result = await UserService.resetPassword(req.user.restaurant_id, id, new_password);
+
+            res.status(200).json({
+                success: true,
+                message: result.message
+            });
+        } catch (error) {
+            res.status(400).json({
+                success: false,
+                error: { message: error.message }
+            });
+        }
+    }
 }
 
 module.exports = new UserController();

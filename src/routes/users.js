@@ -76,4 +76,73 @@ router.get('/', authMiddleware, UserController.getEmployees.bind(UserController)
  */
 router.delete('/:id', authMiddleware, UserController.deleteEmployee.bind(UserController));
 
+/**
+ * @swagger
+ * /users/{id}:
+ *   put:
+ *     summary: Update an employee's info (MANAGER only)
+ *     tags: [Staff]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *                 enum: [WAITER, KITCHEN, CASHIER, ASSISTANT_MANAGER]
+ *     responses:
+ *       200:
+ *         description: Employee updated successfully
+ */
+router.put('/:id', authMiddleware, UserController.updateEmployee.bind(UserController));
+
+/**
+ * @swagger
+ * /users/{id}/reset-password:
+ *   put:
+ *     summary: Reset an employee's password (MANAGER only)
+ *     tags: [Staff]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - new_password
+ *             properties:
+ *               new_password:
+ *                 type: string
+ *                 minLength: 6
+ *                 description: The new password (minimum 6 characters)
+ *     responses:
+ *       200:
+ *         description: Password reset successfully
+ */
+router.put('/:id/reset-password', authMiddleware, UserController.resetPassword.bind(UserController));
+
 module.exports = router;

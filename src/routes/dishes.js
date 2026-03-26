@@ -78,6 +78,35 @@ router.post('/', authMiddleware, upload.single('image'), DishController.createDi
 
 /**
  * @swagger
+ * /dishes/all:
+ *   get:
+ *     summary: List all dishes without pagination
+ *     tags: [Dishes]
+ *     parameters:
+ *       - in: query
+ *         name: category_id
+ *         schema:
+ *           type: string
+ *         description: Filter by category ID (Optional)
+ *       - in: query
+ *         name: restaurant_id
+ *         schema:
+ *           type: string
+ *         description: Mandatory if no Auth token provided (Optional if token present)
+ *       - in: query
+ *         name: grouped
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *         description: If true, formats the response to group dishes by their category
+ *     responses:
+ *       200:
+ *         description: Unpaginated list of dishes (flat or grouped)
+ */
+router.get('/all', optionalAuth, DishController.getAllDishes.bind(DishController));
+
+/**
+ * @swagger
  * /dishes/{id}:
  *   get:
  *     summary: Get dish details
