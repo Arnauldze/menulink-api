@@ -116,7 +116,7 @@ router.put('/:id', authMiddleware, UserController.updateEmployee.bind(UserContro
  * @swagger
  * /users/{id}/reset-password:
  *   put:
- *     summary: Reset an employee's password (MANAGER only)
+ *     summary: Reset an employee's password (MANAGER only, auto-generated)
  *     tags: [Staff]
  *     security:
  *       - bearerAuth: []
@@ -126,22 +126,24 @@ router.put('/:id', authMiddleware, UserController.updateEmployee.bind(UserContro
  *         required: true
  *         schema:
  *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - new_password
- *             properties:
- *               new_password:
- *                 type: string
- *                 minLength: 6
- *                 description: The new password (minimum 6 characters)
  *     responses:
  *       200:
- *         description: Password reset successfully
+ *         description: Password reset successfully, new password returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     new_password:
+ *                       type: string
+ *                       description: The auto-generated password to show to the manager
  */
 router.put('/:id/reset-password', authMiddleware, UserController.resetPassword.bind(UserController));
 

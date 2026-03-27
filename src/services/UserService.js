@@ -114,9 +114,36 @@ class UserService {
     }
 
     /**
-     * Reset an employee's password (Manager action)
+     * Generate a random password
      */
-    async resetPassword(restaurantId, userId, newPassword) {
+    _generatePassword(length = 8) {
+        const uppercase = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+        const lowercase = 'abcdefghjkmnpqrstuvwxyz';
+        const digits = '23456789';
+        const special = '!@#$&*';
+        const all = uppercase + lowercase + digits + special;
+
+        // Guarantee at least one of each type
+        let password = '';
+        password += uppercase[Math.floor(Math.random() * uppercase.length)];
+        password += lowercase[Math.floor(Math.random() * lowercase.length)];
+        password += digits[Math.floor(Math.random() * digits.length)];
+        password += special[Math.floor(Math.random() * special.length)];
+
+        // Fill the rest randomly
+        for (let i = password.length; i < length; i++) {
+            password += all[Math.floor(Math.random() * all.length)];
+        }
+
+        // Shuffle the password
+        return password.split('').sort(() => Math.random() - 0.5).join('');
+    }
+
+    /**
+     * Reset an employee's password (Manager action)
+     * Auto-generates a new password and returns it in plain text
+     */
+    async resetPassword(restaurantId, userId) {
         try {
             const user = await User.findOne({ _id: userId, restaurant_id: restaurantId });
             if (!user) {
@@ -126,13 +153,18 @@ class UserService {
                 throw new Error('Cannot reset MANAGER password through this endpoint');
             }
 
+            const newPassword = this._generatePassword();
+
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(newPassword, salt);
 
             await User.findByIdAndUpdate(userId, { password_hash: hashedPassword });
 
             logger.info('Employee password reset', { userId });
-            return { message: 'Password reset successfully' };
+            return {
+                message: 'Password reset successfully',
+                new_password: newPassword
+            };
         } catch (error) {
             logger.error('Error resetting password', { error: error.message });
             throw error;
