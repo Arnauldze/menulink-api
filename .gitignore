@@ -87,6 +87,12 @@ qr_codes_Update.zip
 *.zip
 
 # ===========================
+# Database exports (MongoDB)
+# ===========================
+*.tables.json
+menu-link.tables.json
+
+# ===========================
 # Utility/one-off scripts
 # ===========================
 generate_qr_files.js
