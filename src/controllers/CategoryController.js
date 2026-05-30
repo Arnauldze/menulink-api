@@ -22,6 +22,7 @@ class CategoryController {
 
             res.status(201).json({
                 success: true,
+                restaurant_id: req.user.restaurant_id,
                 data: category,
                 message: 'Category created'
             });
@@ -33,21 +34,22 @@ class CategoryController {
 
     /**
      * List categories
-     * GET /api/categories?menu_id=...
+     * GET /api/categories?menu_id=...&name=Boissons&restaurant_id=...
      */
     async listCategories(req, res, next) {
         try {
-            const { menu_id } = req.query;
+            const { menu_id, name } = req.query;
             const restaurantId = req.user?.restaurant_id || req.query.restaurant_id;
 
             if (!restaurantId) {
                 return res.status(400).json({ success: false, error: { message: 'restaurant_id missing' } });
             }
 
-            const categories = await CategoryService.listCategories(restaurantId, menu_id);
+            const categories = await CategoryService.listCategories(restaurantId, menu_id, name);
 
             res.status(200).json({
                 success: true,
+                restaurant_id: restaurantId,
                 count: categories.length,
                 data: categories
             });
@@ -74,6 +76,7 @@ class CategoryController {
 
             res.status(200).json({
                 success: true,
+                restaurant_id: restaurantId,
                 data: category
             });
         } catch (error) {
@@ -95,6 +98,7 @@ class CategoryController {
 
             res.status(200).json({
                 success: true,
+                restaurant_id: req.user.restaurant_id,
                 data: category,
                 message: 'Category updated'
             });

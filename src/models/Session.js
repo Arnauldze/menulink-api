@@ -8,6 +8,11 @@ const sessionSchema = new mongoose.Schema(
       default: uuidv4,
       unique: true,
     },
+    restaurant_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Restaurant',
+      required: true,
+    },
     tableId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Table',
@@ -36,6 +41,7 @@ const sessionSchema = new mongoose.Schema(
 // Index for faster queries
 sessionSchema.index({ token: 1 });
 sessionSchema.index({ tableId: 1 });
+sessionSchema.index({ restaurant_id: 1 });
 sessionSchema.index({ expiresAt: 1 });
 
 module.exports = mongoose.model('Session', sessionSchema);

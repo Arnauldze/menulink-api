@@ -33,6 +33,7 @@ class SessionController {
 
       res.status(201).json({
         success: true,
+        restaurant_id: session.restaurant_id,
         data: {
           session: {
             session_id: session.session_id,
@@ -63,10 +64,12 @@ class SessionController {
 
       res.status(200).json({
         success: true,
+        restaurant_id: session.restaurant_id,
         data: {
           session_id: session.session_id,
           table_id: session.table_id,
           table_number: session.table_id.table_number,
+          restaurant_id: session.restaurant_id,
           started_at: formatDate(session.started_at),
         },
         message: 'Session is valid',

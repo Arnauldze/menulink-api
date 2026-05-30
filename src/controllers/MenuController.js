@@ -16,6 +16,7 @@ class MenuController {
 
       res.status(200).json({
         success: true,
+        restaurant_id: restaurantId,
         data: menu,
         message: 'Menu retrieved successfully',
       });
@@ -40,6 +41,7 @@ class MenuController {
 
       res.status(200).json({
         success: true,
+        restaurant_id: restaurantId,
         data: menu,
       });
     } catch (error) {
@@ -73,6 +75,7 @@ class MenuController {
 
       res.status(201).json({
         success: true,
+        restaurant_id: req.user.restaurant_id,
         data: menu,
         message: 'Menu created successfully',
       });
@@ -93,6 +96,7 @@ class MenuController {
 
       res.status(200).json({
         success: true,
+        restaurant_id: req.user.restaurant_id,
         data: menu,
         message: 'Menu updated successfully',
       });

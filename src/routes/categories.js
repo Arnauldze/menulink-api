@@ -53,7 +53,7 @@ const optionalAuth = require('../middleware/optionalAuth');
  * @swagger
  * /categories:
  *   get:
- *     summary: List all categories (optionally filter by menu_id)
+ *     summary: List all categories (optionally filter by menu_id or name)
  *     tags: [Categories]
  *     parameters:
  *       - in: query
@@ -62,13 +62,18 @@ const optionalAuth = require('../middleware/optionalAuth');
  *           type: string
  *         description: Filter by menu ID (Optional)
  *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         description: Filter by category name (e.g., "Boissons" for mobile) - Case insensitive (Optional)
+ *       - in: query
  *         name: restaurant_id
  *         schema:
  *           type: string
  *         description: Mandatory if no Auth token provided (Optional if token present)
  *     responses:
  *       200:
- *         description: List of categories
+ *         description: List of categories with restaurant_id
  *   post:
  *     summary: Create a new category
  *     tags: [Categories]
@@ -90,7 +95,7 @@ const optionalAuth = require('../middleware/optionalAuth');
  *                 type: integer
  *     responses:
  *       201:
- *         description: Category created
+ *         description: Category created with restaurant_id
  */
 router.get('/', optionalAuth, CategoryController.listCategories.bind(CategoryController));
 router.post('/', authMiddleware, CategoryController.createCategory.bind(CategoryController));

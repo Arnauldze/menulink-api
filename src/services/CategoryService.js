@@ -95,13 +95,17 @@ class CategoryService {
     }
 
     /**
-     * List all categories (optionally for a specific menu)
+     * List all categories (optionally for a specific menu or filter by name)
      */
-    async listCategories(restaurantId, menuId) {
+    async listCategories(restaurantId, menuId, categoryName) {
         try {
             const query = { restaurant_id: restaurantId };
             if (menuId) {
                 query.menu_id = menuId;
+            }
+            if (categoryName) {
+                // Case-insensitive search for category name
+                query.name = { $regex: new RegExp('^' + categoryName + '$', 'i') };
             }
             const categories = await Category.find(query).sort({ display_order: 1 });
             return categories;
