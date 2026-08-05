@@ -35,31 +35,32 @@ jobs:
           name: node-app
           path: .
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+  # Deployment to Azure disabled temporarily due to authentication issues
+  # Uncomment and configure Azure secrets to enable deployment
+  # deploy:
+  #   runs-on: ubuntu-latest
+  #   needs: build
+  #   permissions:
+  #     id-token: write #This is required for requesting the JWT
+  #     contents: read #This is required for actions/checkout
 
-    steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
-        with:
-          name: node-app
+  #   steps:
+  #     - name: Download artifact from build job
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: node-app
       
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_D9534F8FF21548C78796EEC0E132A994 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_17495594DAF34B008C0F97F8C2FB6F24 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_DB237AEF1D674782B0E64BF02B3108BD }}
+  #     - name: Login to Azure
+  #       uses: azure/login@v2
+  #       with:
+  #         client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_D9534F8FF21548C78796EEC0E132A994 }}
+  #         tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_17495594DAF34B008C0F97F8C2FB6F24 }}
+  #         subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_DB237AEF1D674782B0E64BF02B3108BD }}
 
-      - name: 'Deploy to Azure Web App'
-        id: deploy-to-webapp
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: 'menu-link'
-          slot-name: 'Production'
-          package: .
-          
+  #     - name: 'Deploy to Azure Web App'
+  #       id: deploy-to-webapp
+  #       uses: azure/webapps-deploy@v3
+  #       with:
+  #         app-name: 'menu-link'
+  #         slot-name: 'Production'
+  #         package: .
