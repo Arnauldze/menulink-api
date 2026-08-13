@@ -17,12 +17,14 @@ info:
 
 
 servers:
-  - url: https://menulink-api.duckdns.org/api
-    description: Production server (AWS EC2)
-  - url: https://menu-link-api.onrender.com/api
-    description: Backup server (Render)
-  - url: http://localhost:3000/api
-    description: Development server
+  - url: https://menulink-api.azurewebsites.net/api
+    description: Production server (Azure App Service)
+  # - url: https://menulink-api.duckdns.org/api
+  #   description: Production server (AWS EC2) - DEPRECATED
+  # - url: https://menu-link-api.onrender.com/api
+  #   description: Backup server (Render) - DEPRECATED
+  #- url: http://localhost:3000/api
+  # description: Development server
 
 tags:
   - name: Health
